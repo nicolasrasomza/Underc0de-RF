@@ -1,9 +1,9 @@
 package org.underc0de.undercoderf.morse
 
-import kotlin.math.sin
+import org.underc0de.undercoderf.audio.ToneBuilder
+import java.text.Normalizer
 
 class MorseEngine {
-    private val sampleRate = 44100
     private val toneFreq = 700.0
 
     private val morseMap = mapOf(
@@ -12,49 +12,47 @@ class MorseEngine {
         'K' to "-.-", 'L' to ".-..", 'M' to "--", 'N' to "-.", 'O' to "---",
         'P' to ".--.", 'Q' to "--.-", 'R' to ".-.", 'S' to "...", 'T' to "-",
         'U' to "..-", 'V' to "...-", 'W' to ".--", 'X' to "-..-", 'Y' to "-.--",
-        'Z' to "--..", '1' to ".----", '2' to "..---", '3' to "...--", '4' to "....-",
+        'Z' to "--..",
+        '0' to "-----", '1' to ".----", '2' to "..---", '3' to "...--", '4' to "....-",
         '5' to ".....", '6' to "-....", '7' to "--...", '8' to "---..", '9' to "----.",
-        '0' to "-----", ' ' to " "
+        '.' to ".-.-.-", ',' to "--..--", '?' to "..--..", '/' to "-..-.", '=' to "-...-",
+        '+' to ".-.-.", '-' to "-....-", '@' to ".--.-.", ':' to "---...", '!' to "-.-.--",
+        '(' to "-.--.", ')' to "-.--.-", '\'' to ".----.", '"' to ".-..-.", '&' to ".-...",
+        ';' to "-.-.-."
     )
 
+    private fun normalize(text: String): String {
+        val noAccents = Normalizer.normalize(text, Normalizer.Form.NFD)
+            .replace(Regex("\\p{Mn}+"), "")
+        return noAccents.uppercase().trim()
+    }
+
+    private fun words(text: String): List<String> =
+        normalize(text).split(Regex("\\s+")).filter { it.isNotEmpty() }
+
+    /** Texto en puntos y rayas para mostrar en pantalla (palabras separadas por " / "). */
+    fun toSymbols(text: String): String =
+        words(text).joinToString("  /  ") { w ->
+            w.mapNotNull { morseMap[it] }.joinToString(" ")
+        }
+
     fun textToAudio(text: String, wpm: Int = 10): ShortArray {
-        val dotDurationMs = 1200.0 / wpm
-        val samples = mutableListOf<Short>()
-
-        val uppercaseText = text.uppercase()
-        for (char in uppercaseText) {
-            val code = morseMap[char] ?: continue
-            if (char == ' ') {
-                addSilence(samples, dotDurationMs * 7)
-                continue
-            }
-
-            for (symbol in code) {
-                when (symbol) {
-                    '.' -> addTone(samples, toneFreq, dotDurationMs)
-                    '-' -> addTone(samples, toneFreq, dotDurationMs * 3)
+        val dot = 1200.0 / wpm
+        val ws = words(text)
+        val tb = ToneBuilder(44100, 5.0 + ws.sumOf { it.length } * 6.0 * dot / 1000.0)
+        for ((wi, word) in ws.withIndex()) {
+            val letters = word.filter { morseMap.containsKey(it) }
+            for ((ci, ch) in letters.withIndex()) {
+                val code = morseMap.getValue(ch)
+                for ((si, sym) in code.withIndex()) {
+                    tb.tone(toneFreq, if (sym == '.') dot else dot * 3, rampMs = 4.0)
+                    if (si < code.length - 1) tb.silence(dot)
                 }
-                addSilence(samples, dotDurationMs)
+                if (ci < letters.length - 1) tb.silence(dot * 3)
             }
-            addSilence(samples, dotDurationMs * 3)
+            if (wi < ws.size - 1) tb.silence(dot * 7)
         }
-
-        return samples.toShortArray()
-    }
-
-    private fun addTone(samples: MutableList<Short>, frequency: Double, durationMs: Double) {
-        val numSamples = (sampleRate * (durationMs / 1000.0)).toInt()
-        for (i in 0 until numSamples) {
-            val angle = 2.0 * Math.PI * i * frequency / sampleRate
-            val sample = (sin(angle) * Short.MAX_VALUE * 0.7).toInt().toShort()
-            samples.add(sample)
-        }
-    }
-
-    private fun addSilence(samples: MutableList<Short>, durationMs: Double) {
-        val numSamples = (sampleRate * (durationMs / 1000.0)).toInt()
-        for (i in 0 until numSamples) {
-            samples.add(0)
-        }
+        tb.silence(300.0)
+        return tb.build()
     }
 }

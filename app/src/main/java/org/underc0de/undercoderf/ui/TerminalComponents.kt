@@ -13,9 +13,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.underc0de.undercoderf.R
+import org.underc0de.undercoderf.audio.Transmitter
 
 val TerminalBlack = Color(0xFF070B10)
 val CardBackground = Color(0xFF0D141F)
@@ -35,7 +37,7 @@ fun TopHeaderBar(status: String = "IDLE") {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "SYS://UNDERC0DE.ORG · $status",
                 color = NeonCyan,
@@ -50,11 +52,21 @@ fun TopHeaderBar(status: String = "IDLE") {
                 fontSize = 11.sp
             )
         }
-        Image(
-            painter = painterResource(id = R.drawable.logo_header),
-            contentDescription = "Underc0de Logo",
-            modifier = Modifier.size(36.dp)
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo_underc0de),
+                contentDescription = "Logo Underc0de",
+                modifier = Modifier.size(40.dp)
+            )
+            Image(
+                painter = painterResource(id = R.drawable.icono_underc0de_rf),
+                contentDescription = "Icono Underc0de RF",
+                modifier = Modifier.size(40.dp)
+            )
+        }
     }
 }
 
@@ -75,5 +87,82 @@ fun CyberCard(
             modifier = Modifier.padding(14.dp),
             content = content
         )
+    }
+}
+
+@Composable
+fun CyberButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    enabled: Boolean = true,
+    container: Color = NeonCyan,
+    content: Color = TerminalBlack
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = container,
+            contentColor = content,
+            disabledContainerColor = CardBackground,
+            disabledContentColor = Color.Gray
+        )
+    ) {
+        Text(text, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+    }
+}
+
+/** Cuenta regresiva grande + progreso de la transmisión en curso (solo si es la de [label]). */
+@Composable
+fun TxStatusCard(label: String) {
+    if (Transmitter.current != label) return
+    when (Transmitter.phase) {
+        Transmitter.Phase.COUNTDOWN -> CyberCard(borderColor = NeonPink) {
+            Text(
+                text = "PREPARÁ EL PTT DEL HANDY",
+                color = NeonPink,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = "${Transmitter.countdown}",
+                color = NeonPink,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                fontSize = 72.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        Transmitter.Phase.PLAYING -> CyberCard(borderColor = NeonGreen) {
+            Text(
+                text = "● TRANSMITIENDO $label... ${(Transmitter.progress * 100).toInt()}%",
+                color = NeonGreen,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = Transmitter.progress,
+                modifier = Modifier.fillMaxWidth(),
+                color = NeonGreen,
+                trackColor = TerminalBlack
+            )
+        }
+        Transmitter.Phase.GAP -> CyberCard(borderColor = NeonGreen) {
+            Text(
+                text = "● $label · pausa breve, repite enseguida...",
+                color = NeonGreen,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp
+            )
+        }
+        Transmitter.Phase.IDLE -> {}
     }
 }

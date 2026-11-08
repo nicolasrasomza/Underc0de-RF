@@ -1,76 +1,81 @@
 package org.underc0de.undercoderf.audio
 
 import android.graphics.Bitmap
-import kotlin.math.sin
 
+/**
+ * Codificador SSTV Robot 36 color (320x240, ~36 s).
+ *
+ * Cabecera: líder 1900 Hz 300 ms, corte 1200 Hz 10 ms, líder 1900 Hz 300 ms,
+ * VIS (inicio 1200 Hz + 7 bits + paridad par + fin 1200 Hz, 30 ms cada uno, LSB primero,
+ * 1100 Hz = 1 y 1300 Hz = 0). Robot 36 = código VIS 8.
+ *
+ * Cada línea (150 ms): sync 1200 Hz 9 ms, porch 1500 Hz 3 ms, Y 88 ms (320 px),
+ * separador 4,5 ms (1500 Hz línea par = R-Y, 2300 Hz línea impar = B-Y),
+ * porch 1900 Hz 1,5 ms, crominancia 44 ms (160 muestras).
+ */
 class SSTVEngine {
-    private val sampleRate = 44100
-
-    fun generateRobot36Audio(bitmap: Bitmap): ShortArray {
-        val scaled = Bitmap.createScaledBitmap(bitmap, 320, 240, true)
-        val samples = mutableListOf<Short>()
-
-        val syncFreq = 1200.0
-        val porchFreq = 1500.0
-
-        addTone(samples, 1900.0, 300.0)
-        addTone(samples, 1200.0, 10.0)
-        addTone(samples, 1900.0, 300.0)
-
-        addTone(samples, 1200.0, 30.0)
-        val visCode = 0x08
-        for (i in 0..6) {
-            val bit = (visCode shr i) and 1
-            val freq = if (bit == 1) 1100.0 else 1300.0
-            addTone(samples, freq, 30.0)
-        }
-        addTone(samples, 1200.0, 30.0)
-
-        for (y in 0 until 240) {
-            addTone(samples, syncFreq, 9.0)
-            addTone(samples, porchFreq, 3.0)
-
-            for (x in 0 until 320) {
-                val pixel = scaled.getPixel(x, y)
-                val r = (pixel shr 16) and 0xFF
-                val g = (pixel shr 8) and 0xFF
-                val b = pixel and 0xFF
-                val yVal = 0.299 * r + 0.587 * g + 0.114 * b
-
-                val freq = 1500.0 + (yVal / 255.0) * 800.0
-                addTone(samples, freq, 0.275)
-            }
-
-            val isEven = y % 2 == 0
-            addTone(samples, if (isEven) 1500.0 else 2300.0, 4.5)
-            addTone(samples, 1900.0, 1.5)
-
-            for (x in 0 until 320 step 2) {
-                val pixel = scaled.getPixel(x, y)
-                val r = (pixel shr 16) and 0xFF
-                val g = (pixel shr 8) and 0xFF
-                val b = pixel and 0xFF
-
-                val colorVal = if (isEven) {
-                    (128 + 0.5 * r - 0.41869 * g - 0.08131 * b)
-                } else {
-                    (128 - 0.168736 * r - 0.331264 * g + 0.5 * b)
-                }
-
-                val freq = 1500.0 + (colorVal / 255.0) * 800.0
-                addTone(samples, freq, 0.275)
-            }
-        }
-
-        return samples.toShortArray()
+    companion object {
+        const val WIDTH = 320
+        const val HEIGHT = 240
+        const val PIXEL_MS = 0.275
     }
 
-    private fun addTone(samples: MutableList<Short>, frequency: Double, durationMs: Double) {
-        val numSamples = (sampleRate * (durationMs / 1000.0)).toInt()
-        for (i in 0 until numSamples) {
-            val angle = 2.0 * Math.PI * i * frequency / sampleRate
-            val sample = (sin(angle) * Short.MAX_VALUE * 0.7).toInt().toShort()
-            samples.add(sample)
+    fun generateRobot36Audio(source: Bitmap): ShortArray {
+        val bmp = if (source.width == WIDTH && source.height == HEIGHT) source
+        else Bitmap.createScaledBitmap(source, WIDTH, HEIGHT, true)
+        val pixels = IntArray(WIDTH * HEIGHT)
+        bmp.getPixels(pixels, 0, WIDTH, 0, 0, WIDTH, HEIGHT)
+
+        val tb = ToneBuilder(44100, 38.0)
+
+        // Cabecera
+        tb.tone(1900.0, 300.0)
+        tb.tone(1200.0, 10.0)
+        tb.tone(1900.0, 300.0)
+        tb.tone(1200.0, 30.0) // bit de inicio
+        val vis = 8
+        var ones = 0
+        for (i in 0 until 7) {
+            val bit = (vis shr i) and 1
+            ones += bit
+            tb.tone(if (bit == 1) 1100.0 else 1300.0, 30.0)
         }
+        tb.tone(if (ones % 2 == 1) 1100.0 else 1300.0, 30.0) // paridad par
+        tb.tone(1200.0, 30.0) // bit de fin
+
+        val yRow = DoubleArray(WIDTH)
+        val ryRow = DoubleArray(WIDTH)
+        val byRow = DoubleArray(WIDTH)
+
+        for (y in 0 until HEIGHT) {
+            for (x in 0 until WIDTH) {
+                val p = pixels[y * WIDTH + x]
+                val r = ((p shr 16) and 0xFF).toDouble()
+                val g = ((p shr 8) and 0xFF).toDouble()
+                val b = (p and 0xFF).toDouble()
+                yRow[x] = 16.0 + (65.738 * r + 129.057 * g + 25.064 * b) / 256.0
+                ryRow[x] = 128.0 + (112.439 * r - 94.154 * g - 18.285 * b) / 256.0
+                byRow[x] = 128.0 + (-37.945 * r - 74.494 * g + 112.439 * b) / 256.0
+            }
+
+            tb.tone(1200.0, 9.0)   // sync
+            tb.tone(1500.0, 3.0)   // porch
+            for (x in 0 until WIDTH) tb.tone(levelToFreq(yRow[x]), PIXEL_MS)
+
+            val even = y % 2 == 0
+            tb.tone(if (even) 1500.0 else 2300.0, 4.5)
+            tb.tone(1900.0, 1.5)
+            val chroma = if (even) ryRow else byRow
+            for (x in 0 until WIDTH step 2) {
+                tb.tone(levelToFreq((chroma[x] + chroma[x + 1]) / 2.0), PIXEL_MS)
+            }
+        }
+        tb.silence(200.0)
+        return tb.build()
+    }
+
+    private fun levelToFreq(level: Double): Double {
+        val l = level.coerceIn(0.0, 255.0)
+        return 1500.0 + l / 255.0 * 800.0
     }
 }

@@ -11,6 +11,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.underc0de.undercoderf.audio.SstvReceiver
+import org.underc0de.undercoderf.audio.Transmitter
 import org.underc0de.undercoderf.ui.*
 
 @Composable
@@ -19,14 +21,19 @@ fun HomeScreen(
     onNavigateToSend: () -> Unit,
     onTriggerSOS: () -> Unit
 ) {
+    val status = when {
+        Transmitter.busy -> "TX"
+        SstvReceiver.listening -> "RX"
+        else -> "IDLE"
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(TerminalBlack)
             .verticalScroll(rememberScrollState())
-            .padding(bottom = 60.dp)
     ) {
-        TopHeaderBar(status = "IDLE")
+        TopHeaderBar(status = status)
 
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -57,89 +64,26 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(
+                CyberButton(
+                    text = "[ RECIBIR ]",
                     onClick = onNavigateToReceive,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonCyan)
-                ) {
-                    Text("[ RECIBIR ]", color = TerminalBlack, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
-                }
-
-                Button(
+                    modifier = Modifier.weight(1f)
+                )
+                CyberButton(
+                    text = "[ ENVIAR ]",
                     onClick = onNavigateToSend,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonCyan)
-                ) {
-                    Text("[ ENVIAR ]", color = TerminalBlack, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                CyberCard(modifier = Modifier.weight(1f)) {
-                    Text("RX IMÁGENES", color = NeonCyan, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-                    Text("14", color = TextWhite, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                }
-                CyberCard(modifier = Modifier.weight(1f)) {
-                    Text("TX IMÁGENES", color = NeonCyan, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-                    Text("5", color = TextWhite, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            var showSOSDialog by remember { mutableStateOf(false) }
-
-            Button(
-                onClick = { showSOSDialog = true },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = NeonPink)
-            ) {
-                Text("[ TRANSMITIR SOS EMERGENCY ]", color = TextWhite, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
-            }
-
-            if (showSOSDialog) {
-                AlertDialog(
-                    onDismissRequest = { showSOSDialog = false },
-                    title = {
-                        Text(
-                            text = "[!] ADVERTENCIA SOS",
-                            color = NeonPink,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold
-                        )
-                    },
-                    text = {
-                        Text(
-                            text = "Una advertencia: el SOS es una señal de socorro real. Probarlo al aire en frecuencias de uso general puede provocar que alguien acuda o que se active una alerta.",
-                            color = TextWhite,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 12.sp
-                        )
-                    },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                showSOSDialog = false
-                                onTriggerSOS()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = NeonPink)
-                        ) {
-                            Text("TRANSMITIR", fontFamily = FontFamily.Monospace)
-                        }
-                    },
-                    dismissButton = {
-                        Button(
-                            onClick = { showSOSDialog = false },
-                            colors = ButtonDefaults.buttonColors(containerColor = CardBackground)
-                        ) {
-                            Text("CANCELAR", color = NeonCyan, fontFamily = FontFamily.Monospace)
-                        }
-                    },
-                    containerColor = TerminalBlack
+                    modifier = Modifier.weight(1f)
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            CyberButton(
+                text = "[ SOS EMERGENCIA ]",
+                onClick = onTriggerSOS,
+                container = NeonPink,
+                content = TextWhite
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
