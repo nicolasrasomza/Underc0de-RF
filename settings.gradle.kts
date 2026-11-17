@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "UndercodeRF"
+rootProject.name = "Underc0deRF"
 include(":app")

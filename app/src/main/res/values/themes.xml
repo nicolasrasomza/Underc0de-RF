@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fondo y barras del sistema con el azul institucional (#212349) para evitar
+         el destello blanco/gris al abrir la app. -->
+    <style name="Theme.Underc0deRF" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/brand_blue</item>
+        <item name="android:colorBackground">@color/brand_blue</item>
+        <item name="android:statusBarColor">@color/brand_blue</item>
+        <item name="android:navigationBarColor">@color/brand_blue</item>
+        <item name="android:colorPrimary">@color/brand_celeste</item>
+        <item name="android:colorAccent">@color/brand_celeste</item>
+    </style>
+</resources>
