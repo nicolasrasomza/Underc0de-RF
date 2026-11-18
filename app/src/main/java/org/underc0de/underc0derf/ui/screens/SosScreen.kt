@@ -214,7 +214,11 @@ fun SosScreen() {
                 )
             },
             confirmButton = {
-                Button(
+                CyberButton(
+                    text = "TRANSMITIR",
+                    modifier = Modifier,
+                    container = BrandAlert,
+                    content = BrandText,
                     onClick = {
                         showConfirm = false
                         val needsNotif = Build.VERSION.SDK_INT >= 33 &&
@@ -226,20 +230,18 @@ fun SosScreen() {
                         } else {
                             startSos(context)
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = BrandAlert, contentColor = BrandText)
-                ) {
-                    Text("TRANSMITIR", fontFamily = BrandFonts.Subtitle, fontWeight = FontWeight.Bold)
-                }
+                    }
+                )
             },
             dismissButton = {
-                Button(
-                    onClick = { showConfirm = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = BrandSurface)
-                ) {
-                    Text("CANCELAR", color = BrandPrimary, fontFamily = BrandFonts.Subtitle, fontWeight = FontWeight.Bold)
-                }
+                CyberButton(
+                    text = "CANCELAR",
+                    modifier = Modifier,
+                    outlined = true,
+                    onClick = { showConfirm = false }
+                )
             },
+            shape = BrandCardShape,
             containerColor = BrandSurface
         )
     }

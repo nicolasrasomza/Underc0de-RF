@@ -2,6 +2,7 @@
 <resources>
     <!-- Manual de Marca Underc0de -->
     <color name="brand_blue">#212349</color>
+    <color name="brand_black">#000000</color>
     <color name="brand_celeste">#3CB7EA</color>
     <!-- Fondo del ícono adaptativo: color del fondo de "icono Underc0de-RF.png" -->
     <color name="ic_launcher_background">#00091E</color>

@@ -41,9 +41,10 @@ fun MorseScreen() {
                 label = { Text("Texto a transmitir", color = BrandPrimary, fontFamily = BrandFonts.Body) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !Transmitter.busy,
+                shape = BrandCardShape,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = BrandPrimary,
-                    unfocusedBorderColor = BrandPrimary.copy(alpha = 0.4f),
+                    unfocusedBorderColor = BrandBorder,
                     disabledBorderColor = BrandPrimary.copy(alpha = 0.2f),
                     focusedTextColor = BrandText,
                     unfocusedTextColor = BrandText,

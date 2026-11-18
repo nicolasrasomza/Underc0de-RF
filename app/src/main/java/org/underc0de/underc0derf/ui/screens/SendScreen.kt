@@ -70,12 +70,12 @@ fun SendScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val shape = androidx.compose.foundation.shape.CutCornerShape(topEnd = 12.dp, bottomStart = 12.dp)
+            val shape = BrandCardShape
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(4f / 3f)
-                    .border(1.dp, BrandPrimary, shape)
+                    .border(1.dp, BrandPrimary.copy(alpha = 0.6f), shape)
                     .background(BrandSurface, shape),
                 contentAlignment = Alignment.Center
             ) {
@@ -107,6 +107,7 @@ fun SendScreen() {
             CyberButton(
                 text = "[ SELECCIONAR IMAGEN ]",
                 enabled = !Transmitter.busy,
+                outlined = true,
                 onClick = {
                     picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 }

@@ -1,10 +1,10 @@
 package org.underc0de.underc0derf.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -75,15 +75,15 @@ fun ScreenTitle(text: String, color: Color = BrandPrimary, fontSize: TextUnit = 
 @Composable
 fun CyberCard(
     modifier: Modifier = Modifier,
-    borderColor: Color = BrandPrimary,
+    borderColor: Color = BrandBorder,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, borderColor, CutCornerShape(topEnd = 12.dp, bottomStart = 12.dp)),
+            .border(1.dp, borderColor, BrandCardShape),
         color = BrandSurface,
-        shape = CutCornerShape(topEnd = 12.dp, bottomStart = 12.dp)
+        shape = BrandCardShape
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -92,6 +92,11 @@ fun CyberCard(
     }
 }
 
+/**
+ * Botón con esquinas cortadas (sup-izq / inf-der).
+ * - Relleno: acción principal ([container] de fondo, [content] para el texto).
+ * - [outlined] = true: acción secundaria, fondo negro con borde y texto del color [container].
+ */
 @Composable
 fun CyberButton(
     text: String,
@@ -99,20 +104,50 @@ fun CyberButton(
     modifier: Modifier = Modifier.fillMaxWidth(),
     enabled: Boolean = true,
     container: Color = BrandPrimary,
-    content: Color = BrandBackground
+    content: Color = BrandBlack,
+    outlined: Boolean = false
 ) {
-    Button(
-        onClick = onClick,
-        modifier = modifier,
-        enabled = enabled,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = container,
-            contentColor = content,
-            disabledContainerColor = BrandSurface,
-            disabledContentColor = BrandMuted
+    val label: @Composable RowScope.() -> Unit = {
+        Text(
+            text = text,
+            fontFamily = BrandFonts.Subtitle,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.5.sp,
+            textAlign = TextAlign.Center
         )
-    ) {
-        Text(text, fontFamily = BrandFonts.Subtitle, fontWeight = FontWeight.Bold)
+    }
+    if (outlined) {
+        OutlinedButton(
+            onClick = onClick,
+            modifier = modifier.heightIn(min = 46.dp),
+            enabled = enabled,
+            shape = BrandButtonShape,
+            border = BorderStroke(1.dp, if (enabled) container else BrandBorder),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = BrandBlack,
+                contentColor = container,
+                disabledContainerColor = BrandBlack,
+                disabledContentColor = BrandMuted
+            ),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            content = label
+        )
+    } else {
+        Button(
+            onClick = onClick,
+            modifier = modifier.heightIn(min = 52.dp),
+            enabled = enabled,
+            shape = BrandButtonShape,
+            border = if (enabled) null else BorderStroke(1.dp, BrandBorder),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = container,
+                contentColor = content,
+                disabledContainerColor = BrandSurface,
+                disabledContentColor = BrandMuted
+            ),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+            content = label
+        )
     }
 }
 

@@ -2,6 +2,7 @@ package org.underc0de.underc0derf.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -12,6 +13,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import org.underc0de.underc0derf.R
 
 /*
@@ -24,8 +26,6 @@ import org.underc0de.underc0derf.R
 // ---- Paleta principal ----
 /** Azul institucional. Fondo general de la app (uso predominante). */
 val BrandBlue = Color(0xFF212349)
-/** Variante oscura del azul institucional para paneles/tarjetas (mejora el contraste del texto). */
-val BrandBlueDeep = Color(0xFF0F1026)
 val BrandCeleste = Color(0xFF3CB7EA)
 val BrandCeleste2 = Color(0xFF3DA4DD)
 val BrandCeleste3 = Color(0xFF4594D1)
@@ -38,12 +38,18 @@ val BrandViolet = Color(0xFF914EF5)
 
 // ---- Neutros ----
 val BrandWhite = Color(0xFFFFFFFF)
+/** Fondo general: negro puro (estética terminal). */
+val BrandBlack = Color(0xFF000000)
+/** Paneles/tarjetas: azul institucional muy oscurecido. */
+val BrandPanel = Color(0xFF0C0E1D)
+/** Borde sutil de paneles y botones secundarios deshabilitados. */
+val BrandBorder = Color(0xFF162A3D)
 /** Texto secundario / deshabilitado (blanco atenuado sobre azul). */
 val BrandMuted = Color(0xFFA9ADD3)
 
 // ---- Roles semánticos usados por las pantallas ----
-val BrandBackground = BrandBlue
-val BrandSurface = BrandBlueDeep
+val BrandBackground = BrandBlack
+val BrandSurface = BrandPanel
 val BrandPrimary = BrandCeleste      // acciones principales, títulos de pantalla
 val BrandSuccess = BrandAqua         // transmitiendo / escuchando / OK
 val BrandAlert = BrandMagenta        // SOS, errores, llamados a la acción críticos
@@ -141,8 +147,15 @@ private val BrandColors = darkColorScheme(
     onSurfaceVariant = BrandMuted,
     error = BrandAlert,
     onError = BrandWhite,
-    outline = BrandCeleste3
+    outline = BrandBorder
 )
+
+/**
+ * Forma de los controles: esquinas superior-izquierda e inferior-derecha cortadas en diagonal
+ * (bloques/contenedores del sistema gráfico de la marca).
+ */
+val BrandButtonShape = CutCornerShape(topStart = 9.dp, bottomEnd = 9.dp)
+val BrandCardShape = CutCornerShape(topStart = 8.dp, bottomEnd = 8.dp)
 
 @Composable
 fun Underc0deTheme(content: @Composable () -> Unit) {

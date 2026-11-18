@@ -10,7 +10,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -130,12 +129,12 @@ fun ReceiveScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val shape = CutCornerShape(topEnd = 12.dp, bottomStart = 12.dp)
+            val shape = BrandCardShape
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(4f / 3f)
-                    .border(1.dp, BrandPrimary, shape)
+                    .border(1.dp, BrandPrimary.copy(alpha = 0.6f), shape)
                     .background(BrandSurface, shape),
                 contentAlignment = Alignment.Center
             ) {
@@ -193,6 +192,7 @@ fun ReceiveScreen() {
             CyberButton(
                 text = "[ GUARDAR IMAGEN ]",
                 enabled = bitmap != null,
+                outlined = true,
                 onClick = {
                     val needsPermission = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
                         ContextCompat.checkSelfPermission(
